@@ -4,7 +4,7 @@ import Data.List (sort)
 import qualified Challenge1 as C1 -- Qualified import in order to not chnage the function names 
 import qualified Challenge2 as C2 
 import qualified Challenge3 as C3 
-
+import qualified Challenge4 as C4
 import qualified Challenge5 as C5
 import qualified Challenge6 as C6
 
@@ -307,6 +307,90 @@ testChallenge3_8 = do
   checkTest "TestChallenge3_8" result expected
 
 ----------------------------------
+------TESTS FOR CHALLENGE 4-------
+----------------------------------
+
+-- Test 1: Simple valid lambda expression
+testChallenge4_1 :: IO ()
+testChallenge4_1 = do
+  let input = "x1 (x2 x3)"
+      expected = Just (C4.LamDef [] (C4.LamApp (C4.LamVar 1) (C4.LamApp (C4.LamVar 2) (C4.LamVar 3))))
+      result = C4.parseLamMacro input
+  checkTest "TestChallenge4_1" result expected
+
+-- Test 2: Valid expression with a macro
+testChallenge4_2 :: IO ()
+testChallenge4_2 = do
+  let input = "x1 x2 F"
+      expected = Just (C4.LamDef [] (C4.LamApp (C4.LamApp (C4.LamVar 1) (C4.LamVar 2)) (C4.LamMacro "F")))
+      result = C4.parseLamMacro input
+  checkTest "TestChallenge4_2" result expected
+
+-- Test 3: Valid expression with a defined macro
+testChallenge4_3 :: IO ()
+testChallenge4_3 = do
+  let input = "def F = λx1 → x1 in λx2 → x2 F"
+      expected = Just (C4.LamDef [("F", C4.LamAbs 1 (C4.LamVar 1))] (C4.LamAbs 2 (C4.LamApp (C4.LamVar 2) (C4.LamMacro "F"))))
+      result = C4.parseLamMacro input
+  checkTest "TestChallenge4_3" result expected
+
+-- Test 4: Invalid nested macro definitions
+testChallenge4_4 :: IO ()
+testChallenge4_4 = do
+  let input = "def F = λx1 → x1 ( def G = λx1 → x1 in x1) in λx2 → x2"
+      expected = Nothing
+      result = C4.parseLamMacro input
+  checkTest "TestChallenge4_4" result expected
+
+-- Test 5: Invalid repeated macro definitions
+testChallenge4_5 :: IO ()
+testChallenge4_5 = do
+  let input = "def F = λx1 → x1 in def F = λx2 → x2 x1 in x1"
+      expected = Nothing
+      result = C4.parseLamMacro input
+  checkTest "TestChallenge4_5" result expected
+
+-- Test 6: Macro body not closed
+testChallenge4_6 :: IO ()
+testChallenge4_6 = do
+  let input = "def F = x1 in F"
+      expected = Nothing
+      result = C4.parseLamMacro input
+  checkTest "TestChallenge4_6" result expected
+
+-- Test 7: Valid expression with multiple macros
+testChallenge4_7 :: IO ()
+testChallenge4_7 = do
+  let input = "def F = λx1 → x1 in def G = λx2 → x2 in F G"
+      expected = Just (C4.LamDef [("F", C4.LamAbs 1 (C4.LamVar 1)), ("G", C4.LamAbs 2 (C4.LamVar 2))] (C4.LamApp (C4.LamMacro "F") (C4.LamMacro "G")))
+      result = C4.parseLamMacro input
+  checkTest "TestChallenge4_7" result expected
+
+-- Test 8: Valid expression with nested applications
+testChallenge4_8 :: IO ()
+testChallenge4_8 = do
+  let input = "(λx1 → x1) x2"
+      expected = Just (C4.LamDef [] (C4.LamApp (C4.LamAbs 1 (C4.LamVar 1)) (C4.LamVar 2)))
+      result = C4.parseLamMacro input
+  checkTest "TestChallenge4_8" result expected
+
+-- Test 9: Invalid expression with unmatched parentheses
+testChallenge4_9 :: IO ()
+testChallenge4_9 = do
+  let input = "(x1 (x2 x3)"
+      expected = Nothing
+      result = C4.parseLamMacro input
+  checkTest "TestChallenge4_9" result expected
+
+-- Test 10: Empty input
+testChallenge4_10 :: IO ()
+testChallenge4_10 = do
+  let input = ""
+      expected = Nothing
+      result = C4.parseLamMacro input
+  checkTest "TestChallenge4_10" result expected
+
+----------------------------------
 ------TESTS FOR CHALLENGE 5-------
 ----------------------------------
 
@@ -509,6 +593,20 @@ main = do
   testChallenge3_7
   testChallenge3_8
   putStrLn "Tests for Challenge3 completed!\n"
+
+  putStrLn "Running tests for CHALLENGE 4..."
+  testChallenge4_1
+  testChallenge4_2
+  testChallenge4_3
+  testChallenge4_4
+  testChallenge4_5
+  testChallenge4_6
+  testChallenge4_7
+  testChallenge4_8
+  testChallenge4_9
+  testChallenge4_10
+  putStrLn "Tests for Challenge4 completed!\n"
+
 
   putStrLn "Running tests for CHALLENGE 5..."
   testChallenge5_1
